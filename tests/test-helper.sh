@@ -28,7 +28,7 @@ status=$($project_dir/monitor-handoff status DP-2)
 assert_contains "$status" '"class":"active"'
 
 missing=$($project_dir/monitor-handoff status HDMI-A-9)
-assert_contains "$missing" '"class":"urgent"'
+assert_contains "$missing" 'Right-click to reconnect HDMI-A-9'
 
 export TEST_SCENARIO=two-active
 >"$TEST_ACTION_LOG"
@@ -42,6 +42,12 @@ export TEST_SCENARIO=target-inactive
 $project_dir/monitor-handoff toggle DP-2 >/dev/null
 actual=$(<"$TEST_ACTION_LOG")
 [[ $actual == reload ]] || fail "unexpected reconnect action: $actual"
+
+export TEST_SCENARIO=target-missing
+>"$TEST_ACTION_LOG"
+$project_dir/monitor-handoff toggle DP-2 >/dev/null
+actual=$(<"$TEST_ACTION_LOG")
+[[ $actual == reload ]] || fail "missing target did not trigger reload: $actual"
 
 export TEST_SCENARIO=one-active
 >"$TEST_ACTION_LOG"

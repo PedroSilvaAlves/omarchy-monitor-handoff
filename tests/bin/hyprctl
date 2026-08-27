@@ -6,7 +6,11 @@ set -o nounset
 scenario=${TEST_SCENARIO:-two-active}
 
 if [[ ${1:-} == monitors && ${2:-} == all && ${3:-} == -j ]]; then
-  printf '%s\n' '[{"name":"DP-1","description":"Primary","disabled":false,"width":2560,"height":1440,"focused":true},{"name":"DP-2","description":"Handoff","disabled":false,"width":3440,"height":1440,"focused":false}]'
+  if [[ $scenario == target-missing ]]; then
+    printf '%s\n' '[{"name":"DP-1","description":"Primary","disabled":false,"width":2560,"height":1440,"focused":true}]'
+  else
+    printf '%s\n' '[{"name":"DP-1","description":"Primary","disabled":false,"width":2560,"height":1440,"focused":true},{"name":"DP-2","description":"Handoff","disabled":false,"width":3440,"height":1440,"focused":false}]'
+  fi
 elif [[ ${1:-} == monitors && ${2:-} == -j ]]; then
   case "$scenario" in
     two-active)
@@ -15,7 +19,7 @@ elif [[ ${1:-} == monitors && ${2:-} == -j ]]; then
     one-active)
       printf '%s\n' '[{"name":"DP-2"}]'
       ;;
-    target-inactive)
+    target-inactive|target-missing)
       printf '%s\n' '[{"name":"DP-1"}]'
       ;;
   esac

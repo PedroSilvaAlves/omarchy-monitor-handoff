@@ -31,7 +31,7 @@ active_monitor_count() {
   active_monitors | jq 'length'
 }
 
-require_monitor() {
+require_monitor_name() {
   local monitor=${1:-}
   [[ -n $monitor ]] || {
     printf 'No monitor selected. Right-click the widget and choose one.\n' >&2
@@ -40,10 +40,6 @@ require_monitor() {
   [[ $monitor =~ ^[A-Za-z0-9_.:-]+$ ]] || {
     printf 'Invalid monitor output name: %s\n' "$monitor" >&2
     exit 2
-  }
-  monitor_exists "$monitor" || {
-    printf 'Monitor not found: %s\n' "$monitor" >&2
-    exit 3
   }
 }
 
@@ -61,7 +57,7 @@ case "${1:-}" in
     if [[ -z $monitor ]]; then
       printf '{"text":"󰍹","tooltip":"Left-click to choose a monitor"}\n'
     elif ! monitor_exists "$monitor"; then
-      jq -cn --arg monitor "$monitor" '{text:"󰍹",class:"urgent",tooltip:("Monitor not found: " + $monitor)}'
+      jq -cn --arg monitor "$monitor" '{text:"󰶐",tooltip:("Left-click to choose · Right-click to reconnect " + $monitor)}'
     elif monitor_is_active "$monitor"; then
       jq -cn --arg monitor "$monitor" '{text:"󰍹",class:"active",tooltip:("Left-click to choose · Right-click to hand off " + $monitor)}'
     else
@@ -70,7 +66,7 @@ case "${1:-}" in
     ;;
   toggle)
     monitor=${2:-}
-    require_monitor "$monitor"
+    require_monitor_name "$monitor"
 
     if monitor_is_active "$monitor"; then
       if (( $(active_monitor_count) <= 1 )); then
@@ -81,6 +77,8 @@ case "${1:-}" in
     else
       # Runtime Lua monitor rules accumulate. Reloading clears the transient
       # disabled rule and restores the user's own monitors.lua configuration.
+      # The selected output may be absent from `monitors all` after the display
+      # switches to another input, so reconnect must not require detection.
       hyprctl reload
     fi
     ;;

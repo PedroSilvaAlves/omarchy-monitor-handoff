@@ -16,6 +16,21 @@ Panel {
 
   readonly property var barIdentity: hostWidget || root
   readonly property string selectedMonitor: String(setting("monitor", ""))
+  readonly property var displayMonitors: {
+    var values = Array.isArray(root.monitors) ? root.monitors.slice() : []
+    if (!root.selectedMonitor) return values
+    for (var i = 0; i < values.length; i++) {
+      if (values[i] && values[i].name === root.selectedMonitor) return values
+    }
+    values.push({
+      name: root.selectedMonitor,
+      description: "Configured output (currently unavailable)",
+      active: false,
+      focused: false,
+      unavailable: true
+    })
+    return values
+  }
 
   function open() {
     root.controller.show()
@@ -115,7 +130,7 @@ Panel {
           }
 
           Repeater {
-            model: root.monitors
+            model: root.displayMonitors
 
             CursorSurface {
               id: monitorRow
@@ -186,7 +201,7 @@ Panel {
           }
 
           Text {
-            visible: !listProcess.running && root.errorMessage === "" && root.monitors.length === 0
+            visible: !listProcess.running && root.errorMessage === "" && root.displayMonitors.length === 0
             text: "No monitors detected"
             color: Qt.darker(root.bar.foreground, 1.35)
             font.family: root.bar.fontFamily
