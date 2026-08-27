@@ -59,13 +59,13 @@ case "${1:-}" in
   status)
     monitor=${2:-}
     if [[ -z $monitor ]]; then
-      printf '{"text":"󰍹","tooltip":"Right-click to choose a monitor"}\n'
+      printf '{"text":"󰍹","tooltip":"Left-click to choose a monitor"}\n'
     elif ! monitor_exists "$monitor"; then
       jq -cn --arg monitor "$monitor" '{text:"󰍹",class:"urgent",tooltip:("Monitor not found: " + $monitor)}'
     elif monitor_is_active "$monitor"; then
-      jq -cn --arg monitor "$monitor" '{text:"󰍹",class:"active",tooltip:("Hand off " + $monitor)}'
+      jq -cn --arg monitor "$monitor" '{text:"󰍹",class:"active",tooltip:("Right-click to hand off " + $monitor + " · Left-click to choose")}'
     else
-      jq -cn --arg monitor "$monitor" '{text:"󰶐",tooltip:("Reconnect " + $monitor)}'
+      jq -cn --arg monitor "$monitor" '{text:"󰶐",tooltip:("Right-click to reconnect " + $monitor + " · Left-click to choose")}'
     fi
     ;;
   toggle)

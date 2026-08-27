@@ -13,7 +13,7 @@ BarWidget {
   readonly property string helperPath: decodeURIComponent(Qt.resolvedUrl("monitor-handoff").toString().replace(/^file:\/\//, ""))
 
   property string iconText: "󰍹"
-  property string statusTooltip: "Right-click to choose a monitor"
+  property string statusTooltip: "Left-click to choose a monitor"
   property bool statusActive: false
   property var panelItem: null
 
@@ -96,8 +96,8 @@ BarWidget {
     tooltipText: root.statusTooltip
 
     onPressed: function(buttonCode) {
-      if (buttonCode === Qt.RightButton) root.togglePanel()
-      else if (buttonCode === Qt.LeftButton) root.toggleSelected()
+      if (buttonCode === Qt.LeftButton) root.togglePanel()
+      else if (buttonCode === Qt.RightButton) root.toggleSelected()
     }
   }
 
