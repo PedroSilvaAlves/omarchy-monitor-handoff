@@ -20,6 +20,18 @@ omarchy bar put pedrosilvaalves.monitor-handoff --before omarchy.clock
 
 Left-click the new bar icon and select the display you want to hand off.
 
+## Remove
+
+```bash
+omarchy plugin remove pedrosilvaalves.monitor-handoff --yes
+```
+
+The saved monitor selection is harmless and can be left in place. To remove it too:
+
+```bash
+rm -f "${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/monitor-handoff/monitor"
+```
+
 ## Requirements
 
 - Omarchy Shell with third-party bar-widget support
