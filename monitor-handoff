@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+usage() {
+  printf 'Usage: %s <list|status|toggle> [monitor]\n' "${0##*/}" >&2
+  exit 2
+}
+
+all_monitors() {
+  hyprctl monitors all -j
+}
+
+active_monitors() {
+  hyprctl monitors -j
+}
+
+monitor_exists() {
+  local monitor=$1
+  all_monitors | jq -e --arg monitor "$monitor" 'any(.name == $monitor)' >/dev/null
+}
+
+monitor_is_active() {
+  local monitor=$1
+  active_monitors | jq -e --arg monitor "$monitor" 'any(.name == $monitor)' >/dev/null
+}
+
+active_monitor_count() {
+  active_monitors | jq 'length'
+}
+
+require_monitor() {
+  local monitor=${1:-}
+  [[ -n $monitor ]] || {
+    printf 'No monitor selected. Right-click the widget and choose one.\n' >&2
+    exit 2
+  }
+  [[ $monitor =~ ^[A-Za-z0-9_.:-]+$ ]] || {
+    printf 'Invalid monitor output name: %s\n' "$monitor" >&2
+    exit 2
+  }
+  monitor_exists "$monitor" || {
+    printf 'Monitor not found: %s\n' "$monitor" >&2
+    exit 3
+  }
+}
+
+case "${1:-}" in
+  list)
+    all_monitors | jq '[.[] | {
+      name,
+      description,
+      active: (.disabled != true and .width > 0 and .height > 0),
+      focused
+    }]'
+    ;;
+  status)
+    monitor=${2:-}
+    if [[ -z $monitor ]]; then
+      printf '{"text":"󰍹","tooltip":"Right-click to choose a monitor"}\n'
+    elif ! monitor_exists "$monitor"; then
+      jq -cn --arg monitor "$monitor" '{text:"󰍹",class:"urgent",tooltip:("Monitor not found: " + $monitor)}'
+    elif monitor_is_active "$monitor"; then
+      jq -cn --arg monitor "$monitor" '{text:"󰍹",class:"active",tooltip:("Hand off " + $monitor)}'
+    else
+      jq -cn --arg monitor "$monitor" '{text:"󰶐",tooltip:("Reconnect " + $monitor)}'
+    fi
+    ;;
+  toggle)
+    monitor=${2:-}
+    require_monitor "$monitor"
+
+    if monitor_is_active "$monitor"; then
+      if (( $(active_monitor_count) <= 1 )); then
+        printf 'Refusing to disable the last active monitor.\n' >&2
+        exit 4
+      fi
+      hyprctl eval "hl.monitor({ output = \"$monitor\", disabled = true })"
+    else
+      # Runtime Lua monitor rules accumulate. Reloading clears the transient
+      # disabled rule and restores the user's own monitors.lua configuration.
+      hyprctl reload
+    fi
+    ;;
+  *)
+    usage
+    ;;
+esac

@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+
+scenario=${TEST_SCENARIO:-two-active}
+
+if [[ ${1:-} == monitors && ${2:-} == all && ${3:-} == -j ]]; then
+  printf '%s\n' '[{"name":"DP-1","description":"Primary","disabled":false,"width":2560,"height":1440,"focused":true},{"name":"DP-2","description":"Handoff","disabled":false,"width":3440,"height":1440,"focused":false}]'
+elif [[ ${1:-} == monitors && ${2:-} == -j ]]; then
+  case "$scenario" in
+    two-active)
+      printf '%s\n' '[{"name":"DP-1"},{"name":"DP-2"}]'
+      ;;
+    one-active)
+      printf '%s\n' '[{"name":"DP-2"}]'
+      ;;
+    target-inactive)
+      printf '%s\n' '[{"name":"DP-1"}]'
+      ;;
+  esac
+elif [[ ${1:-} == eval ]]; then
+  printf 'eval:%s\n' "${2:-}" >>"$TEST_ACTION_LOG"
+elif [[ ${1:-} == reload ]]; then
+  printf 'reload\n' >>"$TEST_ACTION_LOG"
+else
+  printf 'Unexpected hyprctl arguments: %s\n' "$*" >&2
+  exit 64
+fi

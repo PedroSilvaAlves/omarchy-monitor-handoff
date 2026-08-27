@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "id": "pedrosilvaalves.monitor-handoff",
+  "name": "Monitor Handoff",
+  "version": "0.1.0",
+  "author": "Pedro Alves",
+  "license": "MIT",
+  "description": "Temporarily disconnect a selected monitor so it can be handed off to another computer.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Monitor Handoff",
+    "description": "Toggle a selected monitor and choose the output from the bar.",
+    "category": "Compositor",
+    "allowMultiple": false,
+    "defaultSection": "center",
+    "defaults": {
+      "monitor": "",
+      "pollIntervalSec": 2
+    },
+    "schema": [
+      {
+        "key": "monitor",
+        "type": "string",
+        "label": "Monitor output",
+        "description": "Hyprland output name, for example DP-2. You can also select it from the widget's right-click panel.",
+        "defaultValue": ""
+      },
+      {
+        "key": "pollIntervalSec",
+        "type": "integer",
+        "label": "Status refresh interval (seconds)",
+        "min": 1,
+        "max": 60,
+        "step": 1,
+        "defaultValue": 2
+      }
+    ]
+  }
+}
