@@ -14,22 +14,14 @@
   },
   "barWidget": {
     "displayName": "Monitor Handoff",
-    "description": "Toggle a selected monitor and choose the output from the bar.",
+    "description": "Right-click to toggle a monitor; left-click to choose the output.",
     "category": "Compositor",
     "allowMultiple": false,
     "defaultSection": "center",
     "defaults": {
-      "monitor": "",
       "pollIntervalSec": 2
     },
     "schema": [
-      {
-        "key": "monitor",
-        "type": "string",
-        "label": "Monitor output",
-        "description": "Hyprland output name, for example DP-2. You can also select it from the widget's right-click panel.",
-        "defaultValue": ""
-      },
       {
         "key": "pollIntervalSec",
         "type": "integer",
