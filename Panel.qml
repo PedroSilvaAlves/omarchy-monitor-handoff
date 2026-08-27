@@ -95,13 +95,14 @@ Panel {
       onTabRequested: function(direction) { root.switchPanel(direction) }
 
       ScrollView {
+        id: scrollArea
         anchors.fill: parent
         clip: true
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
         Column {
           id: contentColumn
-          width: parent.width
+          width: scrollArea.availableWidth
           spacing: Style.space(10)
 
           Text {
