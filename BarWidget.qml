@@ -13,9 +13,6 @@ BarWidget {
   readonly property string selectedMonitor: pendingMonitor || storedMonitor || String(setting("monitor", ""))
   readonly property int pollIntervalMs: Math.max(1, Number(setting("pollIntervalSec", 2))) * 1000
   readonly property string helperPath: decodeURIComponent(Qt.resolvedUrl("monitor-handoff").toString().replace(/^file:\/\//, ""))
-  readonly property string selectionPath: Quickshell.env("XDG_STATE_HOME")
-    ? Quickshell.env("XDG_STATE_HOME") + "/omarchy/monitor-handoff/monitor"
-    : Quickshell.env("HOME") + "/.local/state/omarchy/monitor-handoff/monitor"
 
   property string iconText: "󰍹"
   property string statusTooltip: "Left-click to choose a monitor"
@@ -42,9 +39,9 @@ BarWidget {
   }
 
   function refresh() {
-    if (statusProcess.running) return
-    statusProcess.command = [root.helperPath, "status", root.selectedMonitor]
-    statusProcess.running = true
+    if (selectionProcess.running || statusProcess.running) return
+    selectionProcess.command = [root.helperPath, "selected", String(setting("monitor", ""))]
+    selectionProcess.running = true
   }
 
   function toggleSelected() {
@@ -80,22 +77,7 @@ BarWidget {
     refresh()
   }
   Component.onCompleted: {
-    selectionFile.reload()
     refresh()
-  }
-
-  FileView {
-    id: selectionFile
-    path: root.selectionPath
-    watchChanges: true
-    printErrors: false
-    onFileChanged: reload()
-    onLoaded: {
-      root.storedMonitor = String(text() || "").trim()
-      root.pendingMonitor = ""
-      root.refresh()
-    }
-    onLoadFailed: root.storedMonitor = ""
   }
 
   Loader {
@@ -124,6 +106,21 @@ BarWidget {
   }
 
   Process {
+    id: selectionProcess
+    stdout: StdioCollector {
+      id: selectionOutput
+      waitForEnd: true
+    }
+    onExited: function(exitCode) {
+      root.storedMonitor = exitCode === 0
+        ? String(selectionOutput.text || "").trim()
+        : String(setting("monitor", ""))
+      statusProcess.command = [root.helperPath, "status", root.selectedMonitor]
+      statusProcess.running = true
+    }
+  }
+
+  Process {
     id: statusProcess
     stdout: StdioCollector {
       waitForEnd: true
@@ -135,8 +132,10 @@ BarWidget {
     id: selectProcess
     onExited: function(exitCode) {
       if (exitCode === 0) {
-        selectionFile.reload()
+        root.storedMonitor = root.pendingMonitor
+        root.pendingMonitor = ""
         root.close()
+        root.refresh()
       } else {
         root.pendingMonitor = ""
       }

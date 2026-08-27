@@ -6,6 +6,7 @@ set -o pipefail
 
 state_dir=${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/monitor-handoff
 selection_file=$state_dir/monitor
+max_selection_bytes=256
 
 usage() {
   printf 'Usage: %s <list|select|selected|status|toggle> [monitor]\n' "${0##*/}" >&2
@@ -46,6 +47,61 @@ require_monitor_name() {
   }
 }
 
+read_selection() {
+  python3 - "$selection_file" "$max_selection_bytes" <<'PY'
+import os
+import stat
+import sys
+
+path = sys.argv[1]
+limit = int(sys.argv[2])
+flags = os.O_RDONLY | os.O_NONBLOCK
+flags |= getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+
+try:
+    fd = os.open(path, flags)
+except (FileNotFoundError, OSError):
+    raise SystemExit(0)
+
+try:
+    info = os.fstat(fd)
+    if not stat.S_ISREG(info.st_mode) or info.st_size > limit:
+        raise SystemExit(0)
+    value = os.read(fd, limit + 1)
+finally:
+    os.close(fd)
+
+if len(value) <= limit:
+    sys.stdout.buffer.write(value.splitlines()[0] + b"\n" if value else b"")
+PY
+}
+
+write_selection() {
+  local monitor=$1
+  python3 - "$state_dir" "$selection_file" "$monitor" <<'PY'
+import os
+import sys
+import tempfile
+
+directory, destination, monitor = sys.argv[1:]
+os.makedirs(directory, mode=0o700, exist_ok=True)
+fd, temporary = tempfile.mkstemp(prefix=".monitor.", dir=directory)
+try:
+    os.fchmod(fd, 0o600)
+    with os.fdopen(fd, "wb") as stream:
+        stream.write((monitor + "\n").encode())
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.replace(temporary, destination)
+except BaseException:
+    try:
+        os.unlink(temporary)
+    except FileNotFoundError:
+        pass
+    raise
+PY
+}
+
 case "${1:-}" in
   list)
     all_monitors | jq '[.[] | {
@@ -58,17 +114,11 @@ case "${1:-}" in
   select)
     monitor=${2:-}
     require_monitor_name "$monitor"
-    mkdir -p "$state_dir"
-    tmp_file=$selection_file.tmp.$$
-    printf '%s\n' "$monitor" >"$tmp_file"
-    mv "$tmp_file" "$selection_file"
+    write_selection "$monitor"
     ;;
   selected)
-    if [[ -r $selection_file ]]; then
-      head -n 1 "$selection_file"
-    else
-      printf '%s\n' "${2:-}"
-    fi
+    selection=$(read_selection)
+    printf '%s\n' "${selection:-${2:-}}"
     ;;
   status)
     monitor=${2:-}

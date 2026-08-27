@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "pedrosilvaalves.monitor-handoff",
   "name": "Monitor Handoff",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Pedro Alves",
   "license": "MIT",
   "description": "Temporarily disconnect a selected monitor so it can be handed off to another computer.",

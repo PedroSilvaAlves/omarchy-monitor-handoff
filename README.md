@@ -36,7 +36,7 @@ rm -f "${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/monitor-handoff/monitor"
 
 - Omarchy Shell with third-party bar-widget support
 - Hyprland using Lua configuration
-- `bash` and `jq` (included with Omarchy)
+- `bash`, `jq`, and `python` (included with Omarchy)
 
 ## How reconnecting works
 

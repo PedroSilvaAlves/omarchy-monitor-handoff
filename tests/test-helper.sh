@@ -42,6 +42,26 @@ $project_dir/monitor-handoff select DP-2
 selected=$($project_dir/monitor-handoff selected)
 [[ $selected == DP-2 ]] || fail "selection was not persisted: $selected"
 
+# Unsafe file types must be ignored without blocking, and selecting must replace
+# a planted destination symlink rather than writing through it.
+rm -f "$XDG_STATE_HOME/omarchy/monitor-handoff/monitor"
+mkfifo "$XDG_STATE_HOME/omarchy/monitor-handoff/monitor"
+fifo_selection=$(timeout 2 "$project_dir/monitor-handoff" selected fallback)
+[[ $fifo_selection == fallback ]] || fail "FIFO selection was not ignored"
+rm "$XDG_STATE_HOME/omarchy/monitor-handoff/monitor"
+
+oversized=$(printf '%0257d' 0)
+printf '%s' "$oversized" >"$XDG_STATE_HOME/omarchy/monitor-handoff/monitor"
+oversized_selection=$($project_dir/monitor-handoff selected fallback)
+[[ $oversized_selection == fallback ]] || fail "oversized selection was not ignored"
+
+symlink_target="$test_tmp/do-not-overwrite"
+printf 'safe\n' >"$symlink_target"
+ln -sfn "$symlink_target" "$XDG_STATE_HOME/omarchy/monitor-handoff/monitor"
+$project_dir/monitor-handoff select DP-2
+[[ $(<"$symlink_target") == safe ]] || fail "selection write followed a symlink"
+[[ ! -L "$XDG_STATE_HOME/omarchy/monitor-handoff/monitor" ]] || fail "selection symlink was not replaced"
+
 export TEST_SCENARIO=two-active
 >"$TEST_ACTION_LOG"
 $project_dir/monitor-handoff toggle DP-2 >/dev/null
