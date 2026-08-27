@@ -31,6 +31,13 @@ assert_contains "$status" '"class":"active"'
 missing=$($project_dir/monitor-handoff status HDMI-A-9)
 assert_contains "$missing" 'Right-click to reconnect HDMI-A-9'
 
+set +o errexit
+no_selection=$($project_dir/monitor-handoff toggle 2>&1)
+no_selection_exit=$?
+set -o errexit
+[[ $no_selection_exit -eq 2 ]] || fail "expected no-selection exit 2, got $no_selection_exit"
+assert_contains "$no_selection" 'Left-click the widget and choose one.'
+
 $project_dir/monitor-handoff select DP-2
 selected=$($project_dir/monitor-handoff selected)
 [[ $selected == DP-2 ]] || fail "selection was not persisted: $selected"

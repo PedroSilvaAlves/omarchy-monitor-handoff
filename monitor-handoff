@@ -37,7 +37,7 @@ active_monitor_count() {
 require_monitor_name() {
   local monitor=${1:-}
   [[ -n $monitor ]] || {
-    printf 'No monitor selected. Right-click the widget and choose one.\n' >&2
+    printf 'No monitor selected. Left-click the widget and choose one.\n' >&2
     exit 2
   }
   [[ $monitor =~ ^[A-Za-z0-9_.:-]+$ ]] || {
