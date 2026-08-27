@@ -11,6 +11,7 @@ trap 'rm -rf "$test_tmp"' EXIT
 
 export PATH="$test_bin:$PATH"
 export TEST_ACTION_LOG="$test_tmp/actions"
+export XDG_STATE_HOME="$test_tmp/state"
 touch "$TEST_ACTION_LOG"
 
 fail() {
@@ -29,6 +30,10 @@ assert_contains "$status" '"class":"active"'
 
 missing=$($project_dir/monitor-handoff status HDMI-A-9)
 assert_contains "$missing" 'Right-click to reconnect HDMI-A-9'
+
+$project_dir/monitor-handoff select DP-2
+selected=$($project_dir/monitor-handoff selected)
+[[ $selected == DP-2 ]] || fail "selection was not persisted: $selected"
 
 export TEST_SCENARIO=two-active
 >"$TEST_ACTION_LOG"

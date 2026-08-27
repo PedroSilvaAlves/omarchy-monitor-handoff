@@ -4,8 +4,11 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+state_dir=${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/monitor-handoff
+selection_file=$state_dir/monitor
+
 usage() {
-  printf 'Usage: %s <list|status|toggle> [monitor]\n' "${0##*/}" >&2
+  printf 'Usage: %s <list|select|selected|status|toggle> [monitor]\n' "${0##*/}" >&2
   exit 2
 }
 
@@ -51,6 +54,21 @@ case "${1:-}" in
       active: (.disabled != true and .width > 0 and .height > 0),
       focused
     }]'
+    ;;
+  select)
+    monitor=${2:-}
+    require_monitor_name "$monitor"
+    mkdir -p "$state_dir"
+    tmp_file=$selection_file.tmp.$$
+    printf '%s\n' "$monitor" >"$tmp_file"
+    mv "$tmp_file" "$selection_file"
+    ;;
+  selected)
+    if [[ -r $selection_file ]]; then
+      head -n 1 "$selection_file"
+    else
+      printf '%s\n' "${2:-}"
+    fi
     ;;
   status)
     monitor=${2:-}

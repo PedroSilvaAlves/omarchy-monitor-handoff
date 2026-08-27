@@ -15,7 +15,9 @@ Panel {
   property string errorMessage: ""
 
   readonly property var barIdentity: hostWidget || root
-  readonly property string selectedMonitor: String(setting("monitor", ""))
+  readonly property string selectedMonitor: hostWidget
+    ? String(hostWidget.selectedMonitor || "")
+    : String(setting("monitor", ""))
   readonly property var displayMonitors: {
     var values = Array.isArray(root.monitors) ? root.monitors.slice() : []
     if (!root.selectedMonitor) return values

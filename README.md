@@ -6,7 +6,7 @@ Temporarily disconnect a selected monitor from Hyprland so the display can be sw
 
 - Left-click to choose a monitor from the displays detected by Hyprland.
 - Right-click the bar icon to disconnect or reconnect the selected monitor.
-- Persists the selected output in Omarchy's `shell.json`.
+- Persists the selected output in a shared state file watched by every bar instance.
 - Refuses to disconnect the last active monitor.
 - Restores the user's own resolution, refresh rate, position, and scale from `monitors.lua`.
 - Uses Hyprland's Lua runtime API introduced with the non-legacy configuration parser.
@@ -19,12 +19,6 @@ omarchy bar put pedrosilvaalves.monitor-handoff --before omarchy.clock
 ```
 
 Left-click the new bar icon and select the display you want to hand off.
-
-You can also configure an output from the command line:
-
-```bash
-omarchy bar set pedrosilvaalves.monitor-handoff monitor DP-2
-```
 
 ## Requirements
 

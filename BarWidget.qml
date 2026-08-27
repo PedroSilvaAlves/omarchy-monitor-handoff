@@ -8,9 +8,14 @@ BarWidget {
   id: root
   moduleName: "pedrosilvaalves.monitor-handoff"
 
-  readonly property string selectedMonitor: String(setting("monitor", ""))
+  property string storedMonitor: ""
+  property string pendingMonitor: ""
+  readonly property string selectedMonitor: pendingMonitor || storedMonitor || String(setting("monitor", ""))
   readonly property int pollIntervalMs: Math.max(1, Number(setting("pollIntervalSec", 2))) * 1000
   readonly property string helperPath: decodeURIComponent(Qt.resolvedUrl("monitor-handoff").toString().replace(/^file:\/\//, ""))
+  readonly property string selectionPath: Quickshell.env("XDG_STATE_HOME")
+    ? Quickshell.env("XDG_STATE_HOME") + "/omarchy/monitor-handoff/monitor"
+    : Quickshell.env("HOME") + "/.local/state/omarchy/monitor-handoff/monitor"
 
   property string iconText: "󰍹"
   property string statusTooltip: "Left-click to choose a monitor"
@@ -52,10 +57,10 @@ BarWidget {
   }
 
   function selectMonitor(name) {
-    if (!name || !root.bar) return
-    root.bar.run("omarchy bar set " + root.moduleName + " monitor " + Util.shellQuote(name))
-    root.close()
-    refreshDelay.restart()
+    if (!name || selectProcess.running) return
+    root.pendingMonitor = name
+    selectProcess.command = [root.helperPath, "select", name]
+    selectProcess.running = true
   }
 
   function updateStatus(raw) {
@@ -74,7 +79,24 @@ BarWidget {
     injectPanel()
     refresh()
   }
-  Component.onCompleted: refresh()
+  Component.onCompleted: {
+    selectionFile.reload()
+    refresh()
+  }
+
+  FileView {
+    id: selectionFile
+    path: root.selectionPath
+    watchChanges: true
+    printErrors: false
+    onFileChanged: reload()
+    onLoaded: {
+      root.storedMonitor = String(text() || "").trim()
+      root.pendingMonitor = ""
+      root.refresh()
+    }
+    onLoadFailed: root.storedMonitor = ""
+  }
 
   Loader {
     id: panelLoader
@@ -106,6 +128,18 @@ BarWidget {
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: root.updateStatus(text)
+    }
+  }
+
+  Process {
+    id: selectProcess
+    onExited: function(exitCode) {
+      if (exitCode === 0) {
+        selectionFile.reload()
+        root.close()
+      } else {
+        root.pendingMonitor = ""
+      }
     }
   }
 
