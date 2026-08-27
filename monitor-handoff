@@ -63,9 +63,9 @@ case "${1:-}" in
     elif ! monitor_exists "$monitor"; then
       jq -cn --arg monitor "$monitor" '{text:"󰍹",class:"urgent",tooltip:("Monitor not found: " + $monitor)}'
     elif monitor_is_active "$monitor"; then
-      jq -cn --arg monitor "$monitor" '{text:"󰍹",class:"active",tooltip:("Right-click to hand off " + $monitor + " · Left-click to choose")}'
+      jq -cn --arg monitor "$monitor" '{text:"󰍹",class:"active",tooltip:("Left-click to choose · Right-click to hand off " + $monitor)}'
     else
-      jq -cn --arg monitor "$monitor" '{text:"󰶐",tooltip:("Right-click to reconnect " + $monitor + " · Left-click to choose")}'
+      jq -cn --arg monitor "$monitor" '{text:"󰶐",tooltip:("Left-click to choose · Right-click to reconnect " + $monitor)}'
     fi
     ;;
   toggle)
